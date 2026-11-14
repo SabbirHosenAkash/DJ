@@ -476,3 +476,74 @@ footer { text-align: center; padding: 40px; border-top: 1px solid var(--border);
     #services .interactive-box { min-height: 275px; padding: 30px 22px; }
     #services .service-copy p { font-size: .9rem; }
 }
+
+
+/* --- 14. Cinematic centre-logo choreography + vivid typewriter loop --- */
+#services .interactive-box { position: relative; }
+#services .service-icon-stage { position: relative; z-index: 2; }
+#services .service-icon-stage i {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin: 0;
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(.35) rotate(-18deg);
+    transition: top .85s cubic-bezier(.2,.8,.2,1),
+                transform .85s cubic-bezier(.2,.8,.2,1),
+                filter .65s ease, opacity .35s ease,
+                box-shadow .5s ease;
+}
+#services .service-icon-stage i.logo-at-center {
+    top: 50%;
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.35) rotate(0);
+    filter: blur(0);
+    box-shadow: 0 0 42px rgba(0,255,136,.42), 0 0 85px rgba(0,200,255,.18),
+                inset 0 0 24px rgba(0,136,255,.2);
+}
+#services .service-icon-stage i.logo-docking {
+    top: 41px;
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1) rotate(0);
+    filter: blur(0);
+}
+#services .service-copy {
+    opacity: 0;
+    transform: translateY(12px);
+    transition: opacity .45s ease, transform .55s ease;
+}
+#services .service-copy.copy-ready {
+    opacity: 1;
+    transform: translateY(0);
+}
+#services .service-copy h3 {
+    background: linear-gradient(90deg,#65ffbd,#43d9ff,#c69bff,#ffe27a,#65ffbd);
+    background-size: 300% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: service-text-spectrum 3.2s linear infinite;
+    filter: drop-shadow(0 0 8px rgba(0,255,180,.18));
+}
+#services .service-copy p {
+    background: linear-gradient(100deg,#f4fff9,#9debd3,#b9dfff,#f4fff9);
+    background-size: 220% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: service-description-spectrum 5s linear infinite;
+}
+#services .service-copy .typing-cursor::after {
+    background: #72ffe0;
+    box-shadow: 0 0 10px #72ffe0, 0 0 18px #42cfff;
+}
+@keyframes service-text-spectrum { to { background-position: 300% 0; } }
+@keyframes service-description-spectrum { to { background-position: 220% 0; } }
+@media (prefers-reduced-motion: reduce) {
+    #services .service-icon-stage i,
+    #services .service-copy,
+    #services .service-copy h3,
+    #services .service-copy p { transition: none !important; animation: none !important; }
+    #services .service-icon-stage i { position: static; opacity: 1; transform: none; }
+    #services .service-copy { opacity: 1; transform: none; }
+}
