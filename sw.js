@@ -1,4 +1,4 @@
-const cacheName = 'writarion-v3'; // Service worker cache refresh for the latest portfolio animations
+const cacheName = 'writarion-v4'; // Service worker cache refresh for the latest portfolio animations
 const assets = [
   './',
   './index.html',
