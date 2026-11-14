@@ -1,52 +1,37 @@
-const cacheName = 'writarion-v4'; // Service worker cache refresh for the latest portfolio animations
-const assets = [
-  './',
-  './index.html',
-  './style.css',
-  './script.js',
-  './sabbir.png',
-  './favicon-32x32.png',
-  './android-chrome-192x192.png',
-  './android-chrome-512x512.png'
+const CACHE_NAME = "writarion-portfolio-v5";
+const CORE_ASSETS = [
+  "./",
+  "./index.html",
+  "./style.css",
+  "./script.js",
+  "./cv.html",
+  "./sabbir.png",
+  "./about.png",
+  "./favicon-32x32.png",
+  "./android-chrome-192x192.png",
+  "./android-chrome-512x512.png"
 ];
-
-// ১. ইন্সটলেশন এবং ফাইল ক্যাশ করা
-self.addEventListener('install', (e) => {
-  self.skipWaiting(); // নতুন সার্ভিস ওয়ার্কার সাথে সাথে একটিভ হবে
-  e.waitUntil(
-    caches.open(cacheName).then((cache) => {
-      console.log('Caching all assets...');
-      // একে একে অ্যাড করা যাতে কোনো একটা ফাইল মিস হলে অন্যগুলো ক্যাশ হয়
-      return Promise.all(
-        assets.map(asset => {
-          return cache.add(asset).catch(err => console.error(`Failed to cache: ${asset}`, err));
-        })
-      );
-    })
-  );
+self.addEventListener("install", event => {
+  self.skipWaiting();
+  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(CORE_ASSETS).catch(error => {
+    console.warn("Some optional portfolio assets could not be cached.", error);
+  })));
 });
-
-// ২. অ্যাক্টিভেশন এবং পুরনো ক্যাশ ডিলিট করা
-self.addEventListener('activate', (e) => {
-  e.waitUntil(
-    caches.keys().then((keys) => {
-      return Promise.all(
-        keys.filter((key) => key !== cacheName).map((key) => caches.delete(key))
-      );
-    }).then(() => self.clients.claim())
-  );
+self.addEventListener("activate", event => {
+  event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key)))).then(() => self.clients.claim()));
 });
-
-// ৩. ফেচ রিকোয়েস্ট হ্যান্ডেল করা (অফলাইন সাপোর্ট)
-self.addEventListener('fetch', (e) => {
-  e.respondWith(
-    caches.match(e.request).then((res) => {
-      return res || fetch(e.request).catch(() => {
-        // যদি নেটওয়ার্ক না থাকে এবং রিকোয়েস্টটি যদি পেজ হয়, তবে index.html দেখাবে
-        if (e.request.mode === 'navigate') {
-          return caches.match('./index.html');
-        }
-      });
-    })
-  );
+self.addEventListener("fetch", event => {
+  if (event.request.method !== "GET") return;
+  const url = new URL(event.request.url);
+  if (url.origin !== self.location.origin) return;
+  event.respondWith(caches.match(event.request).then(cached => {
+    const network = fetch(event.request).then(response => {
+      if (response && response.ok) {
+        const copy = response.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
+      }
+      return response;
+    }).catch(() => cached);
+    return cached || network;
+  }));
 });
