@@ -215,113 +215,140 @@ window.addEventListener('online', () => alert('আপনি এখন অনল�
 window.addEventListener('offline', () => alert('আপনার ইন্টারনেট সংযোগ বিচ্ছিন্ন হয়েছে।'));
 
 
-// --- 9. Cinematic service cards: centre logo, dock, colourful type/delete loop ---
-document.addEventListener("DOMContentLoaded", () => {
-    const serviceCards = document.querySelectorAll("#services .interactive-box");
-    const prefersReducedMotion = window.matchMedia &&
-        window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+// --- 9. Service cards: centre-pop logo, smooth docking, typewriter and repeat loop ---
+(function initCinematicServiceCards() {
+    function initialise() {
+        const cards = document.querySelectorAll("#services .interactive-box");
+        if (!cards.length) return;
 
-    serviceCards.forEach((card) => {
-        const icon = card.querySelector(":scope > i");
-        const heading = card.querySelector(":scope > h3");
-        const paragraph = card.querySelector(":scope > p");
-        if (!icon || !heading || !paragraph) return;
+        const reducedMotion = window.matchMedia &&
+            window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-        const titleText = heading.textContent.trim();
-        const descriptionText = paragraph.textContent.trim();
+        cards.forEach((card) => {
+            if (card.dataset.cinematicReady === "true") return;
 
-        const stage = document.createElement("div");
-        stage.className = "service-icon-stage";
-        stage.appendChild(icon);
+            const icon = card.querySelector(":scope > i");
+            const heading = card.querySelector(":scope > h3");
+            const paragraph = card.querySelector(":scope > p");
+            if (!icon || !heading || !paragraph) return;
 
-        const copy = document.createElement("div");
-        copy.className = "service-copy";
-        heading.classList.add("typing-cursor");
-        paragraph.classList.add("typing-cursor");
-        heading.textContent = "";
-        paragraph.textContent = "";
-        copy.append(heading, paragraph);
+            card.dataset.cinematicReady = "true";
+            const titleText = heading.textContent.trim();
+            const descriptionText = paragraph.textContent.trim();
 
-        card.insertBefore(stage, card.firstChild);
-        card.appendChild(copy);
-        card.setAttribute("aria-label", titleText + ". " + descriptionText);
+            const stage = document.createElement("div");
+            stage.className = "service-icon-stage";
+            stage.setAttribute("aria-hidden", "true");
+            stage.appendChild(icon);
 
-        if (prefersReducedMotion) {
-            heading.textContent = titleText;
-            paragraph.textContent = descriptionText;
-            icon.style.opacity = "1";
-            icon.style.transform = "none";
-            copy.classList.add("copy-ready");
-            return;
-        }
+            const copy = document.createElement("div");
+            copy.className = "service-copy";
+            heading.textContent = "";
+            paragraph.textContent = "";
+            copy.append(heading, paragraph);
 
-        let active = false;
-        let cycle = 0;
+            card.insertBefore(stage, card.firstChild);
+            card.appendChild(copy);
+            card.setAttribute("aria-label", titleText + ". " + descriptionText);
 
-        const wait = (ms) => new Promise(resolve => window.setTimeout(resolve, ms));
-
-        async function typeText(element, text, speed, token) {
-            element.classList.add("typing-cursor");
-            for (let i = 1; i <= text.length; i++) {
-                if (!active || token !== cycle) return false;
-                element.textContent = text.slice(0, i);
-                await wait(speed);
-            }
-            element.classList.remove("typing-cursor");
-            return active && token === cycle;
-        }
-
-        async function animateLoop() {
-            const token = ++cycle;
-            while (active && token === cycle) {
-                // The logo first appears in the exact visual centre of the card.
-                copy.classList.remove("copy-ready");
-                heading.textContent = "";
-                paragraph.textContent = "";
-                icon.classList.remove("logo-docking");
-                icon.classList.add("logo-at-center");
-                card.classList.add("is-cinematic");
-                await wait(1050);
-                if (!active || token !== cycle) break;
-
-                // It then glides into its normal icon position above the copy.
-                icon.classList.remove("logo-at-center");
-                icon.classList.add("logo-docking");
-                await wait(900);
-                if (!active || token !== cycle) break;
-
+            if (reducedMotion) {
+                heading.textContent = titleText;
+                paragraph.textContent = descriptionText;
                 copy.classList.add("copy-ready");
-                await wait(260);
-                if (!await typeText(heading, titleText, 78, token)) break;
-                await wait(320);
-                if (!await typeText(paragraph, descriptionText, 27, token)) break;
-                await wait(1900);
-
-                // Text clears completely before the next cinematic logo entrance.
-                heading.textContent = "";
-                paragraph.textContent = "";
-                copy.classList.remove("copy-ready");
-                await wait(650);
+                icon.classList.add("logo-docking");
+                return;
             }
-        }
 
-        const cardObserver = new IntersectionObserver(entries => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting && !active) {
-                    active = true;
-                    animateLoop();
-                } else if (!entry.isIntersecting && active) {
-                    active = false;
-                    cycle++;
+            let active = false;
+            let cycle = 0;
+            const wait = (ms) => new Promise(resolve => window.setTimeout(resolve, ms));
+
+            async function typeText(element, value, speed, token) {
+                element.classList.add("typing-cursor");
+                for (let i = 0; i < value.length; i++) {
+                    if (!active || token !== cycle) return false;
+                    element.textContent = value.slice(0, i + 1);
+                    await wait(speed);
+                }
+                element.classList.remove("typing-cursor");
+                return active && token === cycle;
+            }
+
+            async function playLoop() {
+                const token = ++cycle;
+                while (active && token === cycle) {
+                    copy.classList.remove("copy-ready");
+                    heading.textContent = "";
+                    paragraph.textContent = "";
+                    heading.classList.remove("typing-cursor");
+                    paragraph.classList.remove("typing-cursor");
+                    icon.classList.remove("logo-docking");
+                    card.classList.add("is-cinematic");
+
+                    // First: the round logo grows dramatically in the centre.
+                    icon.classList.add("logo-at-center");
+                    await wait(1250);
+                    if (!active || token !== cycle) break;
+
+                    // Second: it glides up and settles into its own position.
+                    icon.classList.remove("logo-at-center");
+                    icon.classList.add("logo-docking");
+                    await wait(1000);
+                    if (!active || token !== cycle) break;
+
+                    // Third: reveal and type the title, then the description.
+                    copy.classList.add("copy-ready");
+                    await wait(250);
+                    if (!await typeText(heading, titleText, 82, token)) break;
+                    await wait(280);
+                    if (!await typeText(paragraph, descriptionText, 29, token)) break;
+
+                    await wait(2200);
+                    if (!active || token !== cycle) break;
+
+                    // Clear the copy, pause, then repeat from the centre-logo reveal.
                     heading.textContent = "";
                     paragraph.textContent = "";
                     copy.classList.remove("copy-ready");
-                    icon.classList.remove("logo-at-center", "logo-docking");
-                    card.classList.remove("is-cinematic");
+                    await wait(700);
                 }
-            });
-        }, { threshold: 0.35 });
+            }
 
-        cardObserver.observe(card);
-    });
-});
+            const start = () => {
+                if (active) return;
+                active = true;
+                playLoop();
+            };
+            const stop = () => {
+                if (!active) return;
+                active = false;
+                cycle++;
+                heading.textContent = "";
+                paragraph.textContent = "";
+                heading.classList.remove("typing-cursor");
+                paragraph.classList.remove("typing-cursor");
+                copy.classList.remove("copy-ready");
+                icon.classList.remove("logo-at-center", "logo-docking");
+                card.classList.remove("is-cinematic");
+            };
+
+            if ("IntersectionObserver" in window) {
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) start();
+                        else stop();
+                    });
+                }, { threshold: 0.12, rootMargin: "0px 0px -4% 0px" });
+                observer.observe(card);
+            } else {
+                start();
+            }
+        });
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", initialise, { once: true });
+    } else {
+        initialise();
+    }
+})();
