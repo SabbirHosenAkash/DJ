@@ -547,3 +547,7 @@ footer { text-align: center; padding: 40px; border-top: 1px solid var(--border);
     #services .service-icon-stage i { position: static; opacity: 1; transform: none; }
     #services .service-copy { opacity: 1; transform: none; }
 }
+
+/* Final positioning override: icon is positioned against the full card, not its spacer. */
+#services .service-icon-stage { position: static; }
+#services .interactive-box.is-cinematic .service-icon-stage i { animation: none !important; }
