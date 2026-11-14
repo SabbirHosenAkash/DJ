@@ -33,7 +33,7 @@ self.addEventListener('activate', (e) => {
       return Promise.all(
         keys.filter((key) => key !== cacheName).map((key) => caches.delete(key))
       );
-    })
+    }).then(() => self.clients.claim())
   );
 });
 
